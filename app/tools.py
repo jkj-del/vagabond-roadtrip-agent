@@ -26,7 +26,20 @@ def validate_schema(data: dict, schema: dict) -> bool:
 
 def calculate_route_distance(origin: str, destination: str) -> str:
     """
-    Calculates the driving distance and time between two European cities with schema validation.
+    Calculates the driving distance and duration between two European cities with schema validation.
+
+    Parameters:
+    -----------
+    origin : str
+        The starting city of the route segment (e.g., 'Munich'). Must be at least 2 characters.
+    destination : str
+        The ending city of the route segment (e.g., 'Innsbruck'). Must be at least 2 characters.
+
+    Returns:
+    --------
+    str
+        A JSON-formatted string containing distance_km, duration_hours, and ev_warning, 
+        or an error dictionary with a recovery_instruction.
     """
     input_data = {"origin": origin, "destination": destination}
     

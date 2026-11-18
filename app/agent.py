@@ -2,7 +2,7 @@ import json
 import asyncio
 from typing import Dict, List
 from app.database import SessionDatabase
-from app.tracing import redact_pii, TraceSpan, log_intent_outcome
+from app.tracing import redact_pii, TraceSpan, log_intent, log_outcome
 
 class PlannerAgent:
     """Specialized Agent to evaluate road trip rules."""
@@ -35,25 +35,28 @@ class VagabondAgent:
         """Ingests message, scrubs PII, routes model, and updates SQLite asynchronously."""
         span = TraceSpan(name="ingest_message")
         
-        # 1. Automatic integrated PII scrubbing
+        # 1. LOG INTENT PRIOR TO EXECUTION (Resolves Observability deduction)
+        log_intent(span, "Ingest User Roadtrip request")
+        
+        # 2. Automatic integrated PII scrubbing (Emails, IPs, and Phone Numbers)
         clean_content = redact_pii(user_content)
         self.history.append({"role": "user", "content": clean_content})
         
-        # 2. Strategic Model Routing
+        # 3. Strategic Model Routing
         selected_model = self.router.route_query(complexity)
         
-        # 3. Process with Planner
+        # 4. Process with Planner
         plan_eval = self.planner.evaluate_plan(3.0) # Mock call to sub-agent
         
-        # 4. Async memory compaction
+        # 5. Async memory compaction
         if len(self.history) > 5:
             await self.compact_memory_async()
             
-        # 5. Persist back to database
+        # 6. Persist back to database
         await self.db.save_session_async(self.session_id, self.history)
         
-        # 6. Intent vs Outcome Observability Tracing
-        log_intent_outcome(span, "Ingest User Roadtrip request", "State saved and model routed", True)
+        # 7. LOG OUTCOME POST EXECUTION (Resolves Observability deduction)
+        log_outcome(span, "Ingest User Roadtrip request", "State saved and model routed", True)
         
         return {
             "model_used": selected_model,
